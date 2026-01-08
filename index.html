@@ -1,103 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <title>Braspag Silent Order Post Demo</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+<meta charset="UTF-8">
+<title>Braspag Silent Order Post (Form)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background: #f5f5f5;
-                padding: 30px;
-            }
-            .card-form {
-                max-width: 400px;
-                background: #fff;
-                padding: 20px;
-                border-radius: 6px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            }
-            .card-form h2 {
-                margin-top: 0;
-            }
-            .card-form input {
-                width: 100%;
-                padding: 10px;
-                margin-bottom: 12px;
-                font-size: 14px;
-            }
-            .card-form button {
-                width: 100%;
-                padding: 12px;
-                background: #007bff;
-                color: #fff;
-                border: none;
-                font-size: 16px;
-                cursor: pointer;
-            }
-            pre {
-                background: #222;
-                color: #0f0;
-                padding: 10px;
-                margin-top: 20px;
-                overflow-x: auto;
-            }
-            .error {
-                color: red;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="card-form">
-            <h2>Credit Card</h2>
-            <input type="hidden" id="AccessToken" value="NGI5NWU1MzgtMDI2Ny00NmNkLWFjZmEtMDRiNWI0MTZjYTg2MTgzNDY4ODIyNQ==" />
-            <input type="text" class="bp-sop-cardholdername" placeholder="Card Holder Name" value="JOHN DOE" />
-            <input type="text" class="bp-sop-cardnumber" placeholder="Card Number" value="4111111111111111" />
-            <input type="text" class="bp-sop-cardexpirationdate" placeholder="MM/YYYY" value="12/2030" />
-            <input type="text" class="bp-sop-cardcvv" placeholder="CVV" value="123" />
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    padding: 30px;
+}
+.card-form {
+    max-width: 420px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+.card-form h2 {
+    margin-top: 0;
+}
+.card-form input, .card-form button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+.card-form button {
+    background: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+pre {
+    margin-top: 20px;
+    background: #111;
+    color: #0f0;
+    padding: 10px;
+}
+iframe {
+    display: none;
+}
+</style>
+</head>
 
-            <!-- Optional -->
-            <input type="text" class="bp-sop-cardAlias" placeholder="Alias (optional)" />
-            <input type="hidden" class="bp-sop-cardtype" value="CreditCard" />
+<body>
 
-            <button onclick="submitCard()">Submit</button>
-        </div>
+<div class="card-form">
+    <h2>Credit Card (SOP)</h2>
 
-        <h3>Result</h3>
-        <pre id="result"></pre>
+    <!-- ⚠️ target 必须是 iframe -->
+    <form
+        id="sopForm"
+        method="POST"
+        target="bp_iframe"
+        action="https://transactionsandbox.pagador.com.br/post/api/public/v1/card">
 
-        <script src="https://www.pagador.com.br/post/scripts/silentorderpost-1.0.min.js"></script>
+        <input name="HolderName" placeholder="Card Holder Name" value="JOHN DOE" required>
+        <input name="RawNumber" placeholder="Card Number" value="4111111111111111" required>
+        <input name="Expiration" placeholder="MM/YYYY" value="12/2030" required>
+        <input name="SecurityCode" placeholder="CVV" value="123">
 
-        <script>
-            function submitCard() {
-                document.getElementById("result").innerText = "Sending...";
+        <!-- 必填 -->
+        <input type="hidden" name="AccessToken" value="PUT_YOUR_SANDBOX_ACCESS_TOKEN">
 
-                bpSop_silentOrderPost({
-                    environment: "production", // local | sandbox | production
-                    provider: "braspag", // braspag | cielo
-                    language: "PT",
+        <!-- 可选参数 -->
+        <input type="hidden" name="EnableTokenize" value="true">
+        <input type="hidden" name="EnableBinQuery" value="true">
+        <input type="hidden" name="CardType" value="CreditCard">
 
-                    // ⚠️ 换成你后端生成的真实 AccessToken
-                    accessToken: "NGI5NWU1MzgtMDI2Ny00NmNkLWFjZmEtMDRiNWI0MTZjYTg2MTgzNDY4ODIyNQ==",
+        <button type="submit">Submit</button>
+    </form>
+</div>
 
-                    enableTokenize: true,
-                    enableBinQuery: true,
-                    enableVerifyCard: false,
+<iframe name="bp_iframe"></iframe>
 
-                    onSuccess: function (response) {
-                        document.getElementById("result").innerText = "SUCCESS:\n" + JSON.stringify(response, null, 2);
-                    },
+<h3>Result</h3>
+<pre id="result">Waiting...</pre>
 
-                    onError: function (error) {
-                        document.getElementById("result").innerText = "ERROR:\n" + JSON.stringify(error, null, 2);
-                    },
+<script>
+/**
+ * Braspag SOP 返回的数据会写入 iframe
+ * 我们监听 iframe 的 load 事件读取返回内容
+ */
+const iframe = document.querySelector('iframe');
+iframe.addEventListener('load', function () {
+    try {
+        const body = iframe.contentDocument.body.innerText;
+        document.getElementById('result').innerText = body;
+    } catch (e) {
+        document.getElementById('result').innerText =
+            'Response received, but cannot be read due to cross-domain restrictions.\n\n' +
+            'This is expected. Check Braspag dashboard or backend logs.';
+    }
+});
+</script>
 
-                    onInvalid: function (errors) {
-                        document.getElementById("result").innerText = "INVALID:\n" + JSON.stringify(errors, null, 2);
-                    },
-                });
-            }
-        </script>
-    </body>
+</body>
 </html>
