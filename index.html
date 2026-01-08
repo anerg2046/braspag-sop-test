@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Braspag Silent Order Post Demo</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background: #f5f5f5;
+                padding: 30px;
+            }
+            .card-form {
+                max-width: 400px;
+                background: #fff;
+                padding: 20px;
+                border-radius: 6px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+            .card-form h2 {
+                margin-top: 0;
+            }
+            .card-form input {
+                width: 100%;
+                padding: 10px;
+                margin-bottom: 12px;
+                font-size: 14px;
+            }
+            .card-form button {
+                width: 100%;
+                padding: 12px;
+                background: #007bff;
+                color: #fff;
+                border: none;
+                font-size: 16px;
+                cursor: pointer;
+            }
+            pre {
+                background: #222;
+                color: #0f0;
+                padding: 10px;
+                margin-top: 20px;
+                overflow-x: auto;
+            }
+            .error {
+                color: red;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card-form">
+            <h2>Credit Card</h2>
+            <input type="hidden" id="AccessToken" value="NGI5NWU1MzgtMDI2Ny00NmNkLWFjZmEtMDRiNWI0MTZjYTg2MTgzNDY4ODIyNQ==" />
+            <input type="text" class="bp-sop-cardholdername" placeholder="Card Holder Name" value="JOHN DOE" />
+            <input type="text" class="bp-sop-cardnumber" placeholder="Card Number" value="4111111111111111" />
+            <input type="text" class="bp-sop-cardexpirationdate" placeholder="MM/YYYY" value="12/2030" />
+            <input type="text" class="bp-sop-cardcvv" placeholder="CVV" value="123" />
+
+            <!-- Optional -->
+            <input type="text" class="bp-sop-cardAlias" placeholder="Alias (optional)" />
+            <input type="hidden" class="bp-sop-cardtype" value="CreditCard" />
+
+            <button onclick="submitCard()">Submit</button>
+        </div>
+
+        <h3>Result</h3>
+        <pre id="result"></pre>
+
+        <script src="https://www.pagador.com.br/post/scripts/silentorderpost-1.0.min.js"></script>
+
+        <script>
+            function submitCard() {
+                document.getElementById("result").innerText = "Sending...";
+
+                bpSop_silentOrderPost({
+                    environment: "production", // local | sandbox | production
+                    provider: "braspag", // braspag | cielo
+                    language: "PT",
+
+                    // ⚠️ 换成你后端生成的真实 AccessToken
+                    accessToken: "NGI5NWU1MzgtMDI2Ny00NmNkLWFjZmEtMDRiNWI0MTZjYTg2MTgzNDY4ODIyNQ==",
+
+                    enableTokenize: true,
+                    enableBinQuery: true,
+                    enableVerifyCard: false,
+
+                    onSuccess: function (response) {
+                        document.getElementById("result").innerText = "SUCCESS:\n" + JSON.stringify(response, null, 2);
+                    },
+
+                    onError: function (error) {
+                        document.getElementById("result").innerText = "ERROR:\n" + JSON.stringify(error, null, 2);
+                    },
+
+                    onInvalid: function (errors) {
+                        document.getElementById("result").innerText = "INVALID:\n" + JSON.stringify(errors, null, 2);
+                    },
+                });
+            }
+        </script>
+    </body>
+</html>
